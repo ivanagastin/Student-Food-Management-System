@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="logo">🛡️ <span>Admin</span></div>
+        <nav class="nav-links">
+            <a href="#" class="nav-item active" onclick="showView('dashboard')"><span>⚡</span> Dashboard</a>
+            <a href="#" class="nav-item" onclick="showView('students')"><span>👥</span> Students</a>
+            <a href="#" class="nav-item"><span>📝</span> Menus</a>
+        </nav>
+        <div class="user-profile">
+            <div class="avatar" style="background: var(--primary);">A</div>
+            <div>
+                <div style="font-weight: 600;">Administrator</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Root Access</div>
+            </div>
+            <a href="#" onclick="logout()" style="margin-left: auto;">⏻</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <h1 style="margin-bottom: 40px;">System Oversight</h1>
+
+        <div id="view-dashboard">
+            <div class="card">
+                <h2>Daily Protocol Config</h2>
+                <form onsubmit="handlePostMenu(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label>Target Date</label>
+                        <input type="date" id="menu-date" class="form-input" style="margin-bottom: 5px;">
+                        <div id="day-display" style="font-size: 0.8rem; color: var(--primary);">Today</div>
+                    </div>
+                    <div>
+                        <label>Breakfast Stream</label>
+                        <input type="text" id="menu-breakfast" class="form-input">
+                    </div>
+                    <div>
+                        <label>Lunch Stream</label>
+                        <input type="text" id="menu-lunch" class="form-input">
+                    </div>
+                    <div>
+                        <label>Dinner Stream</label>
+                        <input type="text" id="menu-dinner" class="form-input">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Upload Configuration</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-students" style="display: none;">
+            <div class="card">
+                <h2>User Database</h2>
+                <div style="overflow-x: auto;">
+                    <table id="student-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+                                <th style="padding: 12px;">Roll No</th>
+                                <th style="padding: 12px;">Name</th>
+                                <th style="padding: 12px;">Meal Plan Status</th>
+                                <th style="padding: 12px;">Attendance (Today)</th>
+                                <th style="padding: 12px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('menu-date').value = new Date().toISOString().split('T')[0];
+        loadStudents();
+    });
+
+    function showView(viewName) {
+        document.getElementById('view-dashboard').style.display = viewName === 'dashboard' ? 'block' : 'none';
+        document.getElementById('view-students').style.display = viewName === 'students' ? 'block' : 'none';
+
+        // Update active nav
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if (viewName === 'dashboard') document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+        if (viewName === 'students') document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+    }
+
+    // Menu logic
+    async function handlePostMenu(e) {
+        e.preventDefault();
+        const d = document.getElementById('menu-date').value;
+        const b = document.getElementById('menu-breakfast').value;
+        const l = document.getElementById('menu-lunch').value;
+        const din = document.getElementById('menu-dinner').value;
+        const res = await apiCall('/admin/menus', 'POST', { date: d, breakfast_items: b, lunch_items: l, dinner_items: din });
+        if (res.ok) alert('Protocol Updated.'); else alert('Update Failed.');
+    }
+
+    async function loadStudents() {
+        const res = await apiCall('/admin/students');
+        if (res.ok) {
+            const students = await res.json();
+            document.querySelector('#student-table tbody').innerHTML = students.map(s => {
+                const sub = s.subscription;
+                const status = sub ? `<span class="badge badge-cyan">${sub.plan_name}</span>` : `<span class="badge badge-red">Inactive</span>`;
+                const attendance = s.is_present_today ? `<span style="color: #4ade80">Present</span>` : `<span style="color: var(--text-muted)">Absent</span>`;
+                const action = sub ? `<button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.7rem;" onclick="cancelSub(${sub.id})">Term</button>` : '-';
+
+                const roll = s.roll_no || '-';
+                const name = s.full_name || s.username;
+
+                return `<tr style="border-bottom: 1px solid #1f1f1f;">
+                    <td style="padding: 12px;">${roll}</td>
+                    <td style="padding: 12px;">${name}</td>
+                    <td style="padding: 12px;">${status}</td>
+                    <td style="padding: 12px;">${attendance}</td>
+                    <td style="padding: 12px;">${action}</td>
+                </tr>`;
+            }).join('');
+        }
+    }
+
+    async function cancelSub(id) {
+        if (confirm('Terminate this subscription?')) {
+            const res = await apiCall(`/admin/subscriptions/${id}/cancel`, 'POST');
+            if (res.ok) loadStudents();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 40px;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
+            <h2>System Access</h2>
+            <p style="color: var(--text-muted);">Enter credentials to decrypt.</p>
+        </div>
+
+        <div class="role-switcher"
+            style="display: flex; background: #000; padding: 5px; border-radius: 12px; margin-bottom: 30px;">
+            <button id="btn-student" class="btn"
+                style="flex: 1; background: var(--header-bg); color: var(--text-muted); box-shadow: none;"
+                onclick="setRole('student')">Student</button>
+            <button id="btn-admin" class="btn"
+                style="flex: 1; background: transparent; color: var(--text-muted); box-shadow: none;"
+                onclick="setRole('admin')">Admin</button>
+            <button id="btn-staff" class="btn"
+                style="flex: 1; background: transparent; color: var(--text-muted); box-shadow: none;"
+                onclick="setRole('staff')">Staff</button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Username Handle</label>
+                <input type="text" id="username" class="form-input" required placeholder="user_id">
+            </div>
+
+            <div class="form-group">
+                <label>Passkey</label>
+                <input type="password" id="password" class="form-input" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Authenticate &rarr;</button>
+
+            <p style="margin-top: 20px; text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                No identity found? <a href="#" onclick="showRegister()" style="color: var(--primary);">Initialize New
+                    User</a>
+            </p>
+        </form>
+
+        <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
+            <div class="form-group">
+                <label>New Username</label>
+                <input type="text" id="reg-username" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label>Set Passkey</label>
+                <input type="password" id="reg-password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label>Account Role</label>
+                <select id="reg-role" class="form-input" style="background: var(--bg-body); color: var(--text-main);">
+                    <option value="student">Student</option>
+                    <option value="staff">Staff</option>
+                </select>
+            </div>
+            <button type="submit" class="btn"
+                style="width: 100%; background: var(--secondary); box-shadow: var(--secondary-glow) 0 4px 15px;">Register
+                Identity</button>
+            <p style="margin-top: 20px; text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                <a href="#" onclick="showLogin()" style="color: var(--text-main);">Back to Login</a>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentRole = 'student';
+
+    function setRole(role) {
+        currentRole = role;
+        document.getElementById('btn-student').style.background = role === 'student' ? '#1f1f1f' : 'transparent';
+        document.getElementById('btn-student').style.color = role === 'student' ? 'white' : '#666';
+
+        document.getElementById('btn-admin').style.background = role === 'admin' ? '#1f1f1f' : 'transparent';
+        document.getElementById('btn-admin').style.color = role === 'admin' ? 'white' : '#666';
+
+        document.getElementById('btn-staff').style.background = role === 'staff' ? '#1f1f1f' : 'transparent';
+        document.getElementById('btn-staff').style.color = role === 'staff' ? 'white' : '#666';
+    }
+
+    // Init state
+    setRole('student');
+
+    function showRegister() { document.getElementById('loginForm').style.display = 'none'; document.getElementById('registerForm').style.display = 'block'; }
+    function showLogin() { document.getElementById('registerForm').style.display = 'none'; document.getElementById('loginForm').style.display = 'block'; }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const fd = new URLSearchParams(); fd.append('username', u); fd.append('password', p);
+
+        try {
+            const res = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd });
+            if (res.ok) {
+                const data = await res.json();
+                const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+                if (payload.role !== currentRole) { alert(`Invalid Role. This user is ${payload.role}.`); return; }
+
+                localStorage.setItem('token', data.access_token);
+                if (payload.role === 'admin') window.location.href = '/dashboard/admin';
+                else if (payload.role === 'staff') window.location.href = '/dashboard/staff';
+                else window.location.href = '/dashboard/student';
+            } else { alert('Access Denied.'); }
+        } catch (err) { alert('System Error.'); }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const u = document.getElementById('reg-username').value;
+        const p = document.getElementById('reg-password').value;
+        const r = document.getElementById('reg-role').value;
+        const res = await apiCall('/auth/register', 'POST', { username: u, password: p, role: r });
+        if (res.ok) { alert('Identity Created.'); showLogin(); } else { alert('Creation Failed.'); }
+    }
+</script>
+{% endblock %}

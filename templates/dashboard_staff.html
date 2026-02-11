@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Portal | Student Food Management{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="logo">🍽️ <span></span></div>
+        <nav class="nav-links">
+            <a href="#" class="nav-item active">
+                <span>⚡</span> Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <span>📋</span> Orders
+            </a>
+            <a href="#" class="nav-item">
+                <span>🍳</span> Kitchen View
+            </a>
+        </nav>
+        <div class="user-profile">
+            <div class="avatar" style="background: var(--primary);">S</div>
+            <div>
+                <div style="font-weight: 500;">Staff Member</div>
+                <div style="font-size: 0.8em; color: var(--text-muted);">Kitchen Staff</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Kitchen Dashboard</h1>
+            <button class="btn" onclick="logout()">Logout</button>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <h3>Today's Orders</h3>
+                <div class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Meals</h3>
+                <div class="value">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completed</h3>
+                <div class="value">0</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3>Shift Status</h3>
+            <p>System is operational. Ready for orders.</p>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    }
+</script>
+{% endblock %}

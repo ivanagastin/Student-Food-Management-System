@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Future of Dining{% endblock %}
+
+{% block content %}
+<div class="landing-hero">
+    <nav class="landing-nav">
+        <div class="logo">🍽️ <span></span></div>
+        <div style="display: flex; gap: 20px;">
+            <a href="#menu" style="color: var(--text-muted); padding: 10px;">Menu</a>
+            <a href="#plans" style="color: var(--text-muted); padding: 10px;">Plans</a>
+            <a href="/login" class="btn">Login</a>
+        </div>
+    </nav>
+
+    <div style="max-width: 800px; padding: 20px;">
+        <div class="badge badge-purple" style="margin-bottom: 20px;">Next Gen Campus Dining</div>
+        <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 20px;">
+            Fuel Your <br><span style="color: var(--secondary); text-shadow: 0 0 30px var(--secondary-glow);">Digital
+                Lifestyle.</span>
+        </h1>
+        <p
+            style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Optimized nutrition for students. Real-time menu updates, flexible subscription plans, and seamless
+            management.
+        </p>
+
+        <div style="display: flex; gap: 20px; justify-content: center;">
+            <a href="/login" class="btn" style="padding: 16px 40px; font-size: 1.1rem;">Get Started</a>
+            <a href="#menu" class="btn btn-outline" style="padding: 16px 40px; font-size: 1.1rem; color: white;">View
+                Menu</a>
+        </div>
+    </div>
+</div>
+
+<div style="padding: 80px 40px; max-width: 1200px; margin: 0 auto;" id="menu">
+    <h2 style="text-align: center; margin-bottom: 50px;">Today's Fuel</h2>
+    <div class="grid-3">
+        {% if menu %}
+        <div class="card">
+            <div style="font-size: 3rem; margin-bottom: 20px;">☀️</div>
+            <h3>Breakfast</h3>
+            <p style="color: var(--text-muted);">{{ menu.breakfast_items or 'Standard Protocol' }}</p>
+        </div>
+        <div class="card" style="border-color: var(--primary);">
+            <div style="font-size: 3rem; margin-bottom: 20px;">⚡</div>
+            <h3 style="color: var(--primary);">Lunch</h3>
+            <p style="color: var(--text-muted);">{{ menu.lunch_items or 'High Protein Mix' }}</p>
+        </div>
+        <div class="card">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🌙</div>
+            <h3>Dinner</h3>
+            <p style="color: var(--text-muted);">{{ menu.dinner_items or 'Recovery Meal' }}</p>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--text-muted);">Menu syncing...</p>
+        {% endif %}
+    </div>
+</div>
+
+<div style="padding: 80px 40px; background: #0a0a0a;" id="plans">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <h2 style="text-align: center; margin-bottom: 50px;">Subscription Nodes</h2>
+        <div class="grid-3">
+            {% for plan in plans %}
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3>{{ plan.name }}</h3>
+                <div style="font-size: 3rem; font-weight: 800; margin: 20px 0;">${{ plan.price_monthly }}</div>
+                <p style="color: var(--text-muted); flex: 1;">{{ plan.description }}</p>
+                <a href="/login" class="btn btn-outline"
+                    style="margin-top: 30px; text-align: center; color: white;">Initialize</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<footer style="text-align: center; padding: 40px; color: var(--text-dim); border-top: 1px solid var(--border-color);">
+    <p>&copy; 2026. System Status: Nominal.</p>
+</footer>
+{% endblock %}
